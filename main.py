@@ -6,8 +6,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
 def calculate(expression: str) -> str:
     try:
+        expression = expression.replace(",", "")
         result = eval(expression)
         return str(result)
     except Exception as e:
@@ -89,7 +92,9 @@ messages = [
 
 Think step by step before deciding which tool to use.
 If you can answer directly from your training knowledge, do so without calling any tool.
-Always cite your sources when you use search_web."""
+Always cite your sources when you use search_web.
+For questions requiring external facts combined with math, ALWAYS search for the fact first, then calculate.
+Never assume numerical values from your training data — always verify with search_web first."""
     },
     {
         "role": "user",
