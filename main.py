@@ -1,8 +1,12 @@
 import os
+import uuid
 import requests
 import json
 from groq import Groq
 from dotenv import load_dotenv
+from database.mongo import (
+    load_session,save_session,get_cached_result,save_cached_result,save_report
+)
 
 load_dotenv()
 
@@ -81,27 +85,35 @@ tools = [
     }
 ]
 
+session_id = str(uuid.uuid4())
+print(f"Session ID: {session_id}\n")
 user_input = input("What would you like to research? ")
 
-messages = [
-    {
-        "role": "system",
-        "content": """You are a helpful research assistant with access to two tools:
-1. search_web — use for current, real-time information
-2. calculate — use for ANY mathematical computation, never compute in your head
+existing_messages = load_session(session_id)
 
-Think step by step before deciding which tool to use.
-If you can answer directly from your training knowledge, do so without calling any tool.
-Always cite your sources when you use search_web.
-For questions requiring external facts combined with math, ALWAYS search for the fact first, then calculate.
-Never assume numerical values from your training data — always verify with search_web first.
-Always use the exact number returned by the calculate tool in your final answer, never round it."""
-    },
-    {
-        "role": "user",
-        "content": user_input
-    }
-]
+if existing_messages:
+    messages = existing_messages
+    messages.append({'role':'user','content':user_input})
+else:
+    messages = [
+        {
+            "role": "system",
+            "content": """You are a helpful research assistant with access to two tools:
+    1. search_web — use for current, real-time information
+    2. calculate — use for ANY mathematical computation, never compute in your head
+
+    Think step by step before deciding which tool to use.
+    If you can answer directly from your training knowledge, do so without calling any tool.
+    Always cite your sources when you use search_web.
+    For questions requiring external facts combined with math, ALWAYS search for the fact first, then calculate.
+    Never assume numerical values from your training data — always verify with search_web first.
+    Always use the exact number returned by the calculate tool in your final answer, never round it."""
+        },
+        {
+            "role": "user",
+            "content": user_input
+        }
+    ]
 max_iterations = 10
 iterations = 0
 
