@@ -12,6 +12,8 @@ sessions_collection = db["sessions"]
 cache_collection = db["tool_cache"]
 reports_collection = db["reports"]
 
+cache_collection.create_index("timestamp",expireAfterSeconds=86400)
+
 def save_session(session_id: str, messages: list) -> None:
     sessions_collection.update_one(
         {"session_id": session_id},
@@ -34,3 +36,31 @@ def load_session(session_id: str) -> list:
     if session:
         return session["messages"]
     return []
+
+def get_cached_result(tool_name: str, query: str) -> str | None:
+    cache = cache_collection.find_one({
+        "tool_name": tool_name,
+        "query": query
+    })
+    
+    if cache:
+        age = datetime.now(timezone.utc) - cache["timestamp"]
+        if age.total_seconds() < 86400:  # 86400 = 24 hours in seconds
+            return cache["result"]
+    
+    return None
+
+
+def save_cached_result(tool_name: str, query: str, result: str) -> None:
+    cache_collection.update_one(
+        {"tool_name": tool_name, "query": query},
+        {
+            "$set": {
+                "tool_name": tool_name,
+                "query": query,
+                "result": result,
+                "timestamp": datetime.utcnow()
+            }
+        },
+        upsert=True
+    )
