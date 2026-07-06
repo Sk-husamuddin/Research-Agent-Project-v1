@@ -1,5 +1,5 @@
 from pymongo import MongoClient
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 from dotenv import load_dotenv
 
@@ -21,10 +21,10 @@ def save_session(session_id: str, messages: list) -> None:
             "$set": {
                 "session_id": session_id,
                 "messages": messages,
-                "updated_at": datetime.utcnow()
+                "updated_at": datetime.now(timezone.utc)
             },
             "$setOnInsert": {
-                "created_at": datetime.utcnow()
+                "created_at": datetime.now(timezone.utc)
             }
         },
         upsert=True
@@ -59,7 +59,7 @@ def save_cached_result(tool_name: str, query: str, result: str) -> None:
                 "tool_name": tool_name,
                 "query": query,
                 "result": result,
-                "timestamp": datetime.utcnow()
+                "timestamp": datetime.now(timezone.utc)
             }
         },
         upsert=True
