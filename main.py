@@ -180,12 +180,20 @@ while iterations < max_iterations:
     
     else:
         # Final answer
+        final_answer = response_message.content
         print("=" * 50)
         print("FINAL ANSWER:")
         print("=" * 50)
         print(response_message.content)
-        break
+        save_session(session_id, messages)
 
+        save_report(
+            session_id=session_id,
+            topic=user_input,
+            report=final_answer
+    )
+        print(f"\nSession saved. ID: {session_id}")
+        break
 else:
     # Loop hit max_iterations without a final answer
     print("Agent reached max iterations without a final answer.")
