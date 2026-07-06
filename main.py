@@ -146,13 +146,30 @@ while iterations < max_iterations:
             print(f"Arguments: {tool_args}\n")
             
             if tool_name == "search_web":
-                result = search_web(tool_args["query"])
+                query = tool_args["query"]
+                # Check cache first
+                cached = get_cached_result("search_web", query)
+                if cached:
+                    print("Cache hit — skipping Tavily call\n")
+                    result = cached
+                else:
+                    result = search_web(query)
+                    save_cached_result("search_web", query, result)
+
             elif tool_name == "calculate":
-                result = calculate(tool_args["expression"])
+                expression = tool_args["expression"]
+                # Check cache first
+                cached = get_cached_result("calculate", expression)
+                if cached:
+                    print("Cache hit — skipping calculation\n")
+                    result = cached
+                else:
+                    result = calculate(expression)
+                    save_cached_result("calculate", expression, result)
+
             else:
                 result = "Tool not found"
-            
-            print(f"Observation: {result[:200]}...\n")
+                print(f"Observation: {result[:200]}...\n")
             
             messages.append({
                 "role": "tool",
