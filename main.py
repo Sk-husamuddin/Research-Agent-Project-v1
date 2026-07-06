@@ -169,13 +169,14 @@ while iterations < max_iterations:
 
             else:
                 result = "Tool not found"
-                print(f"Observation: {result[:200]}...\n")
+            print(f"Observation: {result[:200]}...\n")
             
             messages.append({
                 "role": "tool",
                 "tool_call_id": tool_call.id,
                 "content": str(result)
             })
+            save_session(session_id,messages)
     
     else:
         # Final answer
