@@ -64,3 +64,19 @@ def save_cached_result(tool_name: str, query: str, result: str) -> None:
         },
         upsert=True
     )
+
+def save_report(session_id: str, topic: str, report: str) -> None:
+    reports_collection.insert_one({
+        "session_id": session_id,
+        "topic": topic,
+        "report": report,
+        "generated_at": datetime.now(timezone.utc)
+    })
+
+
+def get_reports(session_id: str) -> list:
+    reports = reports_collection.find(
+        {"session_id": session_id},
+        {"_id": 0}
+    ).sort("generated_at", -1)
+    return list(reports)
