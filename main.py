@@ -9,13 +9,18 @@ from database.mongo import (
     load_session,save_session,get_cached_result,save_cached_result,save_report
 )
 
+MODEL_NAME = "llama-3.1-8b-instant"
+MAX_ITERATIONS = 10
+TAVILY_URL = "https://api.tavily.com/search"
+TAVILY_MAX_RESULTS = 3
+REQUEST_TIMEOUT = 15
+
 load_dotenv()
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 def calculate(expression: str) -> str:
     try:
-        expression = expression.replace(",", "")
         aeval = Interpreter()
         result = aeval(expression)
         if aeval.error:
@@ -26,17 +31,17 @@ def calculate(expression: str) -> str:
 
 
 def search_web(query: str) -> str:
-    url = "https://api.tavily.com/search"
     
     payload = {
         "api_key": os.getenv("TAVILY_API_KEY"),
         "query": query,
-        "max_results": 3,
+        "max_results": TAVILY_MAX_RESULTS,
         "include_answer": True
     }
     
     try:
-        response = requests.post(url, json=payload)
+        response = requests.post(TAVILY_URL, json=payload, timeout=REQUEST_TIMEOUT)
+        response.raise_for_status()
         data = response.json()
         
         results = []
@@ -49,6 +54,12 @@ def search_web(query: str) -> str:
         
         return "\n".join(results)
     
+    except requests.Timeout:
+         return "Search error: Request timed out."
+    except requests.HTTPError as e:
+        return f"Search error: HTTP {e.response.status_code}"
+    except requests.RequestException as e:
+        return f"Search error: {e}"
     except Exception as e:
         return f"Search error: {str(e)}"
 
@@ -118,7 +129,7 @@ Rules:
             "content": user_input
         }
     ]
-max_iterations = 10
+max_iterations = MAX_ITERATIONS
 iterations = 0
 
 print("\nAgent is thinking...\n")
@@ -127,7 +138,7 @@ while iterations < max_iterations:
     iterations += 1
     try:
         response = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model=MODEL_NAME,
             messages=messages,
             tools=tools,
             tool_choice="auto"
@@ -167,26 +178,40 @@ while iterations < max_iterations:
             print(f"Arguments: {tool_args}\n")
             
             if tool_name == "search_web":
-                query = tool_args["query"]
-                # Check cache first
-                cached = get_cached_result("search_web", query)
-                if cached:
-                    print("Cache hit — skipping Tavily call\n")
-                    result = cached
+                query = tool_args.get("query")
+                
+
+                if not query:
+                    result = "Tool error: Missing 'query' argument."
+                
                 else:
-                    result = search_web(query)
-                    save_cached_result("search_web", query, result)
+                    query = query.strip().lower()
+                    cached = get_cached_result("search_web", query)
+                    if cached:
+                        print("Cache hit — skipping Tavily call\n")
+                        result = cached
+                    else:
+                        result = search_web(query)
+
+                        if not result.startswith("Search error"):
+                            save_cached_result("search_web", query, result)
 
             elif tool_name == "calculate":
-                expression = tool_args["expression"]
-                # Check cache first
-                cached = get_cached_result("calculate", expression)
-                if cached:
-                    print("Cache hit — skipping calculation\n")
-                    result = cached
+                expression = tool_args.get("expression")
+                
+                if not expression:
+                    result = "Tool error: Missing 'expression' argument."
+                
                 else:
-                    result = calculate(expression)
-                    save_cached_result("calculate", expression, result)
+                    expression = expression.replace(",", "").strip()
+                    cached = get_cached_result("calculate", expression)
+                    if cached:
+                        print("Cache hit — skipping calculation\n")
+                        result = cached
+                    else:
+                        result = calculate(expression)
+                        if not result.startswith("Calculation error"):
+                            save_cached_result("calculate", expression, result)
 
             else:
                 result = "Tool not found"
