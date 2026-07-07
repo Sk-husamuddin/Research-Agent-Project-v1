@@ -44,9 +44,7 @@ def get_cached_result(tool_name: str, query: str) -> str | None:
     })
     
     if cache:
-        age = datetime.now(timezone.utc) - cache["timestamp"]
-        if age.total_seconds() < 86400:  # 86400 = 24 hours in seconds
-            return cache["result"]
+        return cache["result"]
     
     return None
 
