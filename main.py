@@ -121,13 +121,16 @@ print("\nAgent is thinking...\n")
 
 while iterations < max_iterations:
     iterations += 1
-    
-    response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
-        messages=messages,
-        tools=tools,
-        tool_choice="auto"
-    )
+    try:
+        response = client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=messages,
+            tools=tools,
+            tool_choice="auto"
+        )
+    except Exception as e:
+        print(f"Model call failed: {e}")
+        continue
     
     response_message = response.choices[0].message
     
@@ -135,7 +138,21 @@ while iterations < max_iterations:
     if response_message.tool_calls:
         
         # Append model's decision to history
-        messages.append(response_message)
+        messages.append({
+            "role":"assistant",
+            "content":None,
+            "tool_calls":[
+                {
+                "id":tc.id,
+                "type":"function",
+                "function":{
+                    "name":tc.function.name,
+                    "arguments":tc.function.arguments
+                }
+        }
+        for tc in response_message.tool_calls
+            ]
+        })
         
         # Execute each tool call
         for tool_call in response_message.tool_calls:
@@ -181,6 +198,10 @@ while iterations < max_iterations:
     else:
         # Final answer
         final_answer = response_message.content
+        messages.append({
+            "role":"assistant",
+            "content":final_answer
+        })
         print("=" * 50)
         print("FINAL ANSWER:")
         print("=" * 50)
