@@ -3,11 +3,25 @@ import uuid
 import requests
 import json
 from groq import Groq
+from openai import OpenAI
 from dotenv import load_dotenv
 from asteval import Interpreter
 from database.mongo import (
     load_session,save_session,get_cached_result,save_cached_result,save_report
 )
+
+# Switch between providers easily
+USE_OPENAI = True  # set True to use OpenAI
+
+if USE_OPENAI:
+    from openai import OpenAI
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    MODEL_NAME = "gpt-4o-mini"
+else:
+    from groq import Groq
+    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+    MODEL_NAME = "llama-3.1-8b-instant"
+
 
 MODEL_NAME = "llama-3.1-8b-instant"
 MAX_ITERATIONS = 10
@@ -152,7 +166,8 @@ Rules:
 - The calculate expression must contain only numbers and operators
 - Never add extra fields to tool calls — only pass what the schema requires
 - Always cite sources when using search_web
-- Use exact numbers from calculate in your final answer, never round"""
+- Use exact numbers from calculate in your final answer, never round
+- Always state the direct answer first, then explain if needed. Never describe what tool you used as the answer."""
         },
         {
             "role": "user",
