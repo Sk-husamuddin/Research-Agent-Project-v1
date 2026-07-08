@@ -9,30 +9,30 @@ from asteval import Interpreter
 from database.mongo import (
     load_session,save_session,get_cached_result,save_cached_result,save_report
 )
-
+load_dotenv()
 # Switch between providers easily
 USE_OPENAI = True  # set True to use OpenAI
 
 if USE_OPENAI:
     from openai import OpenAI
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-    MODEL_NAME = "gpt-4o-mini"
+    client = OpenAI(api_key=os.getenv("GITHUB_TOKEN"),base_url="https://models.github.ai/inference")
+    MODEL_NAME = "gpt-4.1-mini"
 else:
     from groq import Groq
     client = Groq(api_key=os.getenv("GROQ_API_KEY"))
     MODEL_NAME = "llama-3.1-8b-instant"
 
-
-MODEL_NAME = "llama-3.1-8b-instant"
+print("USE_OPENAI =", USE_OPENAI)
+print("MODEL =", MODEL_NAME)
+print("CLIENT =", type(client))
 MAX_ITERATIONS = 10
 TAVILY_URL = "https://api.tavily.com/search"
 TAVILY_MAX_RESULTS = 3
 REQUEST_TIMEOUT = 15
 
-load_dotenv()
+
 aeval = Interpreter()
 
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 def calculate(expression: str) -> str:
     try:
@@ -97,6 +97,7 @@ def handle_calculate(tool_args: dict) -> str:
     if not expression:
         return "Tool error: Missing 'expression' argument."
     expression = expression.replace(",", "").strip()
+    expression = expression.replace("^","**")
     cached = get_cached_result("calculate", expression)
     if cached:
         print("Cache hit — skipping calculation\n")
