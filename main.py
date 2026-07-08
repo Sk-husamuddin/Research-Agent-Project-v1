@@ -16,12 +16,12 @@ TAVILY_MAX_RESULTS = 3
 REQUEST_TIMEOUT = 15
 
 load_dotenv()
+aeval = Interpreter()
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 def calculate(expression: str) -> str:
     try:
-        aeval = Interpreter()
         result = aeval(expression)
         if aeval.error:
             return f"Calculation error: {aeval.error[0].get_error()}"
@@ -62,6 +62,36 @@ def search_web(query: str) -> str:
         return f"Search error: {e}"
     except Exception as e:
         return f"Search error: {str(e)}"
+
+def handle_search_web(tool_args: dict) -> str:
+    query = tool_args.get("query")
+    if not query:
+        return "Tool error: Missing 'query' argument."
+    query = query.strip().lower()
+    cached = get_cached_result("search_web", query)
+    if cached:
+        print("Cache hit — skipping Tavily call\n")
+        return cached
+    result = search_web(query)
+    if not result.startswith("Search error"):
+        save_cached_result("search_web", query, result)
+    return result
+
+
+def handle_calculate(tool_args: dict) -> str:
+    expression = tool_args.get("expression")
+    if not expression:
+        return "Tool error: Missing 'expression' argument."
+    expression = expression.replace(",", "").strip()
+    cached = get_cached_result("calculate", expression)
+    if cached:
+        print("Cache hit — skipping calculation\n")
+        return cached
+    result = calculate(expression)
+    if not result.startswith("Calculation error"):
+        save_cached_result("calculate", expression, result)
+    return result
+
 
 tools = [
     {
@@ -134,6 +164,14 @@ iterations = 0
 
 print("\nAgent is thinking...\n")
 
+
+TOOL_MAP = {
+    "search_web": handle_search_web,
+    "calculate": handle_calculate
+}
+
+
+
 while iterations < max_iterations:
     iterations += 1
     try:
@@ -177,41 +215,10 @@ while iterations < max_iterations:
             print(f"Calling tool: {tool_name}")
             print(f"Arguments: {tool_args}\n")
             
-            if tool_name == "search_web":
-                query = tool_args.get("query")
-                
+            handler = TOOL_MAP.get(tool_name)
 
-                if not query:
-                    result = "Tool error: Missing 'query' argument."
-                
-                else:
-                    query = query.strip().lower()
-                    cached = get_cached_result("search_web", query)
-                    if cached:
-                        print("Cache hit — skipping Tavily call\n")
-                        result = cached
-                    else:
-                        result = search_web(query)
-
-                        if not result.startswith("Search error"):
-                            save_cached_result("search_web", query, result)
-
-            elif tool_name == "calculate":
-                expression = tool_args.get("expression")
-                
-                if not expression:
-                    result = "Tool error: Missing 'expression' argument."
-                
-                else:
-                    expression = expression.replace(",", "").strip()
-                    cached = get_cached_result("calculate", expression)
-                    if cached:
-                        print("Cache hit — skipping calculation\n")
-                        result = cached
-                    else:
-                        result = calculate(expression)
-                        if not result.startswith("Calculation error"):
-                            save_cached_result("calculate", expression, result)
+            if handler:
+                result = handler(tool_args)
 
             else:
                 result = "Tool not found"
