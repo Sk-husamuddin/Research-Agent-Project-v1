@@ -14,11 +14,9 @@ load_dotenv()
 USE_OPENAI = True  # set True to use OpenAI
 
 if USE_OPENAI:
-    from openai import OpenAI
     client = OpenAI(api_key=os.getenv("GITHUB_TOKEN"),base_url="https://models.github.ai/inference")
     MODEL_NAME = "gpt-4.1-mini"
 else:
-    from groq import Groq
     client = Groq(api_key=os.getenv("GROQ_API_KEY"))
     MODEL_NAME = "llama-3.1-8b-instant"
 
@@ -145,6 +143,11 @@ tools = [
     }
 ]
 
+TOOL_MAP = {
+    "search_web": handle_search_web,
+    "calculate": handle_calculate
+}
+
 session_id = str(uuid.uuid4())
 print(f"Session ID: {session_id}\n")
 user_input = input("What would you like to research? ")
@@ -181,10 +184,7 @@ iterations = 0
 print("\nAgent is thinking...\n")
 
 
-TOOL_MAP = {
-    "search_web": handle_search_web,
-    "calculate": handle_calculate
-}
+
 
 
 
