@@ -166,3 +166,67 @@ Rules:
         ]
 
     iterations = 0
+
+    while iterations < MAX_ITERATIONS:
+        iterations += 1
+        try:
+            response = client.chat.completions.create(
+                model=MODEL_NAME,
+                messages=messages,
+                tools=tools,
+                tool_choice="auto"
+            )
+        except Exception as e:
+            continue
+
+        response_message = response.choices[0].message
+
+        if response_message.tool_calls:
+            messages.append({
+                "role": "assistant",
+                "content": None,
+                "tool_calls": [
+                    {
+                        "id": tc.id,
+                        "type": "function",
+                        "function": {
+                            "name": tc.function.name,
+                            "arguments": tc.function.arguments
+                        }
+                    }
+                    for tc in response_message.tool_calls
+                ]
+            })
+
+            for tool_call in response_message.tool_calls:
+                tool_name = tool_call.function.name
+                tool_args = json.loads(tool_call.function.arguments)
+
+                handler = TOOL_MAP.get(tool_name)
+                result = handler(tool_args) if handler else "Tool not found"
+
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": tool_call.id,
+                    "content": str(result)
+                })
+                save_session(session_id, messages)
+
+        else:
+            final_answer = response_message.content
+            messages.append({"role": "assistant", "content": final_answer})
+            save_session(session_id, messages)
+            save_report(session_id=session_id, topic=query, report=final_answer)
+
+            return {
+                "session_id": session_id,
+                "answer": final_answer,
+                "status": "success"
+            }
+
+    return {
+        "session_id": session_id,
+        "answer": None,
+        "status": "max_iterations_reached",
+        "last_observation": str(messages[-1]["content"])[:300]
+    }
