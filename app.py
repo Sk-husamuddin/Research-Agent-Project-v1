@@ -3,6 +3,7 @@ from typing import Optional
 from fastapi import FastAPI
 from agent_core import run_react_loop
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import HTTPException
 
 
 app = FastAPI()
@@ -27,7 +28,12 @@ class QueryResponse(BaseModel):
     last_observation: Optional[str] = None
     last_error: Optional[str] = None
 
-@app.post("/query",response_model=QueryRequest)
+@app.post("/query",response_model=QueryResponse)
 
 def query_agent(request:QueryRequest):
-    result = run_react_loop(query=request.query, session_id=request.session_id)
+    try:
+        result = run_react_loop(query=request.query, session_id=request.session_id)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500,detail=f"Agent failed:{str(e)}")
+
