@@ -28,6 +28,12 @@ class QueryResponse(BaseModel):
     last_observation: Optional[str] = None
     last_error: Optional[str] = None
 
+@app.get("/")
+def message():
+    return {
+        "message":"server is running"
+    }
+
 @app.post("/query",response_model=QueryResponse)
 
 def query_agent(request:QueryRequest):
