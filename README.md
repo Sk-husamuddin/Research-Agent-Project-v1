@@ -170,8 +170,21 @@ Both tools are wrapped with caching handlers that check for a previously compute
 
 ## 13. Demo
 
-<!-- Add link to demo video here -->
-<!-- [Watch the demo](your-video-link) -->
+### Example: Multi-step Research Query
+
+**Request:**
+![Query request and Query response](<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/7aaa5dec-c587-441c-a1cb-b0d56e9b40ff" />
+)
+
+
+### Example: Follow-up Question (Session Continuity)
+
+The agent correctly resolves "double that number" using the population figure from the previous turn, confirming MongoDB session memory works across requests.
+
+![Follow-up query showing session continuity](<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/43f4e005-2717-47af-a045-7b139714a1d7" />
+)
+![MongoDB Sessions and Reports](<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/4dbf8074-f75e-4208-9ddb-1e889ce31b86" />
+)
 
 ## 14. Future Improvements
 
