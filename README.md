@@ -172,19 +172,22 @@ Both tools are wrapped with caching handlers that check for a previously compute
 
 ### Example: Multi-step Research Query
 
-**Request:**
-![Query request and Query response](<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/7aaa5dec-c587-441c-a1cb-b0d56e9b40ff" />
-)
+**Request & Response:**
 
+<img width="800" alt="Query request and response" src="https://github.com/user-attachments/assets/7aaa5dec-c587-441c-a1cb-b0d56e9b40ff" />
 
 ### Example: Follow-up Question (Session Continuity)
 
 The agent correctly resolves "double that number" using the population figure from the previous turn, confirming MongoDB session memory works across requests.
 
-![Follow-up query showing session continuity](<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/43f4e005-2717-47af-a045-7b139714a1d7" />
-)
-![MongoDB Sessions and Reports](<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/4dbf8074-f75e-4208-9ddb-1e889ce31b86" />
-)
+<img width="800" alt="Follow-up query showing session continuity" src="https://github.com/user-attachments/assets/43f4e005-2717-47af-a045-7b139714a1d7" />
+
+### MongoDB Persistence
+
+Sessions and reports are saved as real documents in MongoDB Atlas, confirming persistence works beyond just the in-memory request/response cycle.
+
+<img width="800" alt="MongoDB Sessions and Reports collections" src="https://github.com/user-attachments/assets/4dbf8074-f75e-4208-9ddb-1e889ce31b86" />
+
 
 ## 14. Future Improvements
 
