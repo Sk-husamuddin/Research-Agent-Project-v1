@@ -7,7 +7,7 @@
 
 A from-scratch implementation of a **ReAct (Reasoning + Acting) AI agent** that answers research questions by autonomously deciding when to search the web, when to perform calculations, and when it has enough information to give a final answer. Built without any agent framework (no LangChain, no LangGraph) — the entire reasoning loop, tool-calling logic, and persistence layer are hand-written to demonstrate a first-principles understanding of how autonomous LLM agents actually work under the hood.
 
-Wrapped in a production-style FastAPI backend with MongoDB-backed session memory, this project served as the foundation for a more advanced LangGraph-based iteration ([V2](#)), built for the **InnoGenesis 2026** Agentic AI hackathon.
+Wrapped in a production-style FastAPI backend with MongoDB-backed session memory, this project served as the foundation for a more advanced LangGraph-based iteration ([V2](https://github.com/Sk-husamuddin/Research-Agent-Project-v2)), built for the **InnoGenesis 2026** Agentic AI hackathon.
 
 ## 2. Motivation
 
